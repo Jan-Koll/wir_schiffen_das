@@ -1,0 +1,134 @@
+name: wir_schiffen_das
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 15s
+      timeout: 60s
+      retries:  5
+      start_period: 80s
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    networks:
+      - wir_schiffen_das
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+    networks:
+      - wir_schiffen_das
+    env_file:
+      - ./.env
+    restart: on-failure
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    networks:
+      - wir_schiffen_das
+    restart: on-failure
+  configuration_manager:
+    build: 
+      context: ./microservices/configuration_manager
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${CONFIGURATION_MANAGER_PORT}:${CONFIGURATION_MANAGER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - wir_schiffen_das
+    restart: on-failure
+  cooling_exhaust_analyzer:
+    build: 
+      context: ./microservices/cooling_exhaust_analyzer
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${COOLING_EXHAUST_ANALYZER_PORT}:${COOLING_EXHAUST_ANALYZER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+    - wir_schiffen_das
+    restart: on-failure
+  engine_control_analyzer:
+    build: 
+      context: ./microservices/engine_control_analyzer
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${ENGINE_CONTROL_ANALYZER_PORT}:${ENGINE_CONTROL_ANALYZER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+    - wir_schiffen_das
+    restart: on-failure
+  mounting_analyzer:
+    build: 
+      context: ./microservices/mounting_analyzer
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${MOUNTING_ANALYZER_PORT}:${MOUNTING_ANALYZER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+    - wir_schiffen_das
+    restart: on-failure
+  propulsion_analyzer:
+    build: 
+      context: ./microservices/propulsion_analyzer
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${PROPULSION_ANALYZER_PORT}:${PROPULSION_ANALYZER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+    - wir_schiffen_das
+    restart: on-failure
+  supply_analyzer:
+    build: 
+      context: ./microservices/supply_analyzer
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    ports:
+      - "${SUPPLY_ANALYZER_PORT}:${SUPPLY_ANALYZER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+    - wir_schiffen_das
+    restart: on-failure
+volumes:
+  wir_schiffen_das_postgres: {} 
+  prometheus_data: {}
+
+networks:
+  wir_schiffen_das:
+    driver: bridge

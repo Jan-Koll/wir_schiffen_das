@@ -1,0 +1,45 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'codelab-monitor'
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'configuration_manager'
+    metrics_path: '/v1/metrics'
+    static_configs:
+      - targets: ['wir_schiffen_das-configuration_manager-1:8081']
+  - job_name: 'cooling_exhaust_analyzer'
+    metrics_path: '/v1/metrics'
+    static_configs:
+      - targets: ['wir_schiffen_das-cooling_exhaust_analyzer-1:8082']
+  - job_name: 'engine_control_analyzer'
+    metrics_path: '/v1/metrics'
+    static_configs:
+      - targets: ['wir_schiffen_das-engine_control_analyzer-1:8083']
+  - job_name: 'mounting_analyzer'
+    metrics_path: '/v1/metrics'
+    static_configs:
+      - targets: ['wir_schiffen_das-mounting_analyzer-1:8084']
+  - job_name: 'propulsion_analyzer'
+    metrics_path: '/v1/metrics'
+    static_configs:
+      - targets: ['wir_schiffen_das-propulsion_analyzer-1:8085']
+  - job_name: 'supply_analyzer'
+    metrics_path: '/v1/metrics'
+    static_configs:
+      - targets: ['wir_schiffen_das-supply_analyzer-1:8086']
+rule_files:
+  - "alert.rules.yml"
